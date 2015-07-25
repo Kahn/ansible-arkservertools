@@ -1,0 +1,16 @@
+---
+- name: Test for ufw
+  stat: path=/usr/sbin/ufw
+  register: ufw
+
+- name: Set ufw firewall_module
+  set_fact: firewall_module="ufw"
+  when: ufw.stat.exists
+
+- name: Test for firewalld
+  stat: path=/usr/sbin/firewalld
+  register: firewalld
+
+- name: Set firewalld firewall_module
+  set_fact: firewall_module="firewalld"
+  when: firewalld.stat.exists

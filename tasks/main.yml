@@ -1,0 +1,89 @@
+---
+- name: Install os dependencies
+  yum: name=lsof
+       state=present
+  when: ansible_os_family == 'RedHat' and ansible_distribution != "Fedora"
+
+# https://github.com/ansible/ansible/issues/7606
+- name: Test existing ark-server-tools
+  stat: path={{ arkservertools_user_homedir }}/master.tar.gz
+  register: stat
+
+- name: debug
+  debug: var=stat.stat.exists
+
+- name: Fetch ark-server-tools
+  get_url: url={{ arkservertools_url }}
+       dest={{ arkservertools_user_homedir }}/master.tar.gz
+       owner={{ arkservertools_user }}
+       group={{ arkservertools_user }}
+  when: not stat.stat.exists
+
+- name: Extract the ark-server-tools-master archive
+  unarchive: copy=no
+             src={{ arkservertools_user_homedir }}/master.tar.gz
+             dest={{ arkservertools_user_homedir }}
+             owner={{ arkservertools_user }}
+             group={{ arkservertools_user }}
+             creates={{ steamcmd_user_homedir }}/ark-server-tools-master/tools/install.sh
+
+- name: Install ark-server-tools
+  command: "{{ steamcmd_user_homedir }}/ark-server-tools-master/tools/install.sh {{ arkservertools_user }}"
+  args:
+    chdir: "{{ arkservertools_user_homedir }}/ark-server-tools-master/tools"
+    creates: /usr/local/bin/arkmanager
+
+- name: Add arkmanager.cfg configuration
+  template: src=arkmanager.cfg
+            dest=/etc/arkmanager/arkmanager.cfg
+  notify: restart arkmanager
+
+- name: Install ARK dedicated server
+  command: su -l {{ arkservertools_user }} -c 'arkmanager install'
+  args:
+    creates: "{{ arkservertools_user_homedir }}/ARK/arkversion"
+  async: 3600
+  poll: 30
+  register: install_ark
+  ignore_errors: yes
+
+- name: debug
+  debug: var=install_ark
+
+- name: Assert Install ARK dedicated server passed
+  assert: { that: "install_ark.rc == 0 or install_ark.rc == 191" }
+
+- name: Ensure ARK server running
+  service: name=arkmanager state=started enabled=yes
+  when: install_ark.rc == 0
+
+- name: ARK server updated, restarting
+  service: name=arkmanager state=started enabled=yes
+  when: install_ark.rc == 191
+
+- include: set-firewall-module.yml
+
+- name: Configure firewall via ufw
+  ufw: rule=allow port={{ item }} proto=tcp
+  with_items:
+    - "{{ arkservertools_ark_RCONPort }}"
+    - "{{ arkservertools_ark_Port }}"
+    - "{{ arkservertools_ark_QueryPort }}"
+  when: firewall_module == "ufw"
+
+- name: Configure firewall via ufw
+  ufw: rule=allow port={{ item }} proto=udp
+  with_items:
+    - "{{ arkservertools_ark_Port }}"
+    - "{{ arkservertools_ark_QueryPort }}"
+  when: firewall_module == "ufw"
+
+- name: Configure firewall via firewalld
+  firewalld: port={{ item }} immediate=yes permanent=true state=enabled zone=public
+  with_items:
+    - "{{ arkservertools_ark_RCONPort }}/tcp"
+    - "{{ arkservertools_ark_Port }}/tcp"
+    - "{{ arkservertools_ark_Port }}/udp"
+    - "{{ arkservertools_ark_QueryPort }}/tcp"
+    - "{{ arkservertools_ark_QueryPort }}/udp"
+  when: firewall_module == "firewalld"

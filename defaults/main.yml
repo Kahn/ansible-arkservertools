@@ -1,0 +1,12 @@
+---
+arkservertools_url: "https://github.com/FezVrasta/ark-server-tools/archive/master.tar.gz"
+arkservertools_user: "{{ steamcmd_user }}"
+arkservertools_user_homedir: "{{ steamcmd_user_homedir }}"
+
+arkservertools_ark_RCONPort: 32330
+arkservertools_ark_SessionName: ARK Server Tools
+arkservertools_ark_Port: 7778
+arkservertools_ark_QueryPort: 27016
+#arkservertools_ark_ServerPassword:
+arkservertools_ark_ServerAdminPassword: keyboardcat
+arkservertools_ark_MaxPlayers: 70

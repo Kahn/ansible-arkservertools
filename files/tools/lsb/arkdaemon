@@ -1,0 +1,72 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          ARK manager deamon
+# Required-Start:    networking
+# Required-Stop:     networking
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: ARK manager deamon
+# Description:       ARK manager daemon used to start the server and keep it updated
+#
+### END INIT INFO
+
+# Using the lsb functions to perform the operations.
+. /lib/lsb/init-functions
+
+# Global variables
+source /etc/arkmanager/arkmanager.cfg
+
+NAME="ShooterGameServer"
+LOGFILE="${logdir}/${NAME}.log"
+DAEMON="/usr/bin/arkmanager"
+
+set -e
+
+# If the daemon is not there, then exit.
+test -x $DAEMON || exit 5
+
+case "$1" in
+  start)
+    log_daemon_msg "Starting" "$NAME"
+    ulimit -n 100000
+    su -s /bin/sh -c "$DAEMON start" $steamcmd_user
+    sleep 5
+    PID=`ps -ef | grep $NAME | grep -v grep | awk '{print $2}'`
+    if  [ -n "$PID" ];  then
+      echo "$PID" >/var/run/arkmanager.pid
+      log_end_msg 0
+    else
+      log_end_msg 1
+    fi
+  ;;
+
+  stop)
+    log_daemon_msg "Stopping" "$NAME"
+    su -s /bin/sh -c "$DAEMON stop" $steamcmd_user
+    sleep 5
+    PID=`ps -ef | grep $NAME | grep -v grep | awk '{print $2}'`
+    if  [ -n "$PID" ];  then
+      log_end_msg 1
+    else
+      rm /var/run/arkmanager.pid
+      log_end_msg 0
+    fi
+  ;;
+
+  restart)
+    ulimit -n 100000
+    su -s /bin/sh -c "$DAEMON restart" $steamcmd_user
+  ;;
+
+  status)
+    su -s /bin/sh -c "$DAEMON status" $steamcmd_user
+  ;;
+
+  *)
+    # For invalid arguments, print the usage message.
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 2
+  ;;
+esac
+
+exit 0
