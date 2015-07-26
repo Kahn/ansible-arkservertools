@@ -63,4 +63,4 @@ MIT
 Author Information
 ------------------
 
-Sam Wilson - http://www.cycloptivity.net/
+Sam Wilson - [http://www.cycloptivity.net/](http://www.cycloptivity.net/)
