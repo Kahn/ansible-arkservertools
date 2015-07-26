@@ -6,26 +6,54 @@ Provides an [ARK Survival Evolved](http://playark.com/) dedicated server, based 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+The ARK dedicated server requires an x86_64 architecture.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+The arkservertools role provides the following default options. **arkservertools_user** and **arkservertools_user_homedir** inherit from the *steamcmd* role to match the target server configuration.
+
+```
+arkservertools_url: "https://github.com/FezVrasta/ark-server-tools/archive/master.tar.gz"
+arkservertools_user: "{{ steamcmd_user }}"
+arkservertools_user_homedir: "{{ steamcmd_user_homedir }}"
+
+arkservertools_ark_RCONPort: 32330
+arkservertools_ark_SessionName: ARK Server Tools
+arkservertools_ark_Port: 7778
+arkservertools_ark_QueryPort: 27016
+# If your using passwords and a public DCVS **ensure** you use ansible-vault!
+#arkservertools_ark_ServerPassword:
+arkservertools_ark_ServerAdminPassword: keyboardcat
+arkservertools_ark_MaxPlayers: 70
+```
+
+When defining multiple servers, override these values using host_vars or inventory vars.
+
+```
+# inventory/all
+vivid-64 arkservertools_ark_SessionName=vivid-x64.ark.cycloptivity.net
+centos-7-64 arkservertools_ark_SessionName=centos-7-x64.ark.cycloptivity.net
+jessie-64 arkservertools_ark_SessionName=jessie-x64.ark.cycloptivity.net
+trusty-64 arkservertools_ark_SessionName=trusty-x64.ark.cycloptivity.net
+```
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+* steamcmd
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```
+---
+- hosts: ark
+  roles:
+  - kahn.steamcmd
+  - kahn.arkservertools
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+```
 
 License
 -------
@@ -35,4 +63,4 @@ MIT
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+Sam Wilson - http://www.cycloptivity.net/

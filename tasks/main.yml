@@ -1,4 +1,7 @@
 ---
+- name: Assert that our platform is x86_64
+  assert: { that: ansible_architecture == "x86_64" }
+
 - name: Install os dependencies
   yum: name=lsof
        state=present
@@ -8,9 +11,6 @@
 - name: Test existing ark-server-tools
   stat: path={{ arkservertools_user_homedir }}/master.tar.gz
   register: stat
-
-- name: debug
-  debug: var=stat.stat.exists
 
 - name: Fetch ark-server-tools
   get_url: url={{ arkservertools_url }}
@@ -47,11 +47,8 @@
   register: install_ark
   ignore_errors: yes
 
-- name: debug
-  debug: var=install_ark
-
 - name: Assert Install ARK dedicated server passed
-  assert: { that: "install_ark.rc == 0 or install_ark.rc == 191" }
+  assert: { that: "install_ark.rc == 0 or install_ark.rc == 183 or install_ark.rc == 191" }
 
 - name: Ensure ARK server running
   service: name=arkmanager state=started enabled=yes
