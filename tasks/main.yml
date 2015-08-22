@@ -48,15 +48,10 @@
   ignore_errors: yes
 
 - name: Assert Install ARK dedicated server passed
-  assert: { that: "install_ark.rc == 0 or install_ark.rc == 183 or install_ark.rc == 191" }
+  assert: { that: install_ark.stdout.find("Success! App '376030' fully installed.") }
 
-- name: Ensure ARK server running
+- name: Ensure ARK server running and enabled
   service: name=arkmanager state=started enabled=yes
-  when: install_ark.rc == 0
-
-- name: ARK server updated, restarting
-  service: name=arkmanager state=started enabled=yes
-  when: install_ark.rc == 191
 
 - include: set-firewall-module.yml
 
